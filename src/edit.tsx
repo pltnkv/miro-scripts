@@ -1,6 +1,9 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import IScript from 'IScripts'
+import * as firebase from 'firebase/app'
+import 'firebase/firestore'
+import {firebaseConfig} from 'config'
 
 require('./edit.less')
 
@@ -17,6 +20,8 @@ class Root extends React.Component {
 		scripts: [],
 		currentScript: undefined
 	}
+	private firebase: any = firebase.initializeApp(firebaseConfig)
+	private db: any = firebase.firestore()
 
 	async componentWillMount() {
 		const state = await miro.__getRuntimeState()
@@ -29,13 +34,17 @@ class Root extends React.Component {
 	}
 
 	onSave() {
-		//todo save to FB
-		miro.board.ui.closeModal()
+		let scriptRef = this.db.collection('scripts').doc(scriptId)
+		scriptRef.set({})
+			.then(() => {miro.board.ui.closeModal()})
+			.catch(() => {miro.showErrorNotification('Can\'t save script')})
 	}
 
 	onDelete() {
-		//todo delete in FB
-		miro.board.ui.closeModal()
+		let scriptRef = this.db.collection('scripts').doc(scriptId)
+		scriptRef.delete()
+			.then(() => {miro.board.ui.closeModal()})
+			.catch(() => {miro.showErrorNotification('Can\'t delete script')})
 	}
 
 	render() {
@@ -45,7 +54,7 @@ class Root extends React.Component {
 				{/*<textarea defaultValue={this.state.script!.content}></textarea>*/}
 			</div>
 			<button onClick={this.onSave}>Save</button>
-			{this.state.mode === 'edit'? <button onClick={this.onDelete}>Delete</button> : null}
+			{this.state.mode === 'edit' ? <button onClick={this.onDelete}>Delete</button> : null}
 		</div>
 	}
 }
@@ -53,6 +62,6 @@ class Root extends React.Component {
 miro.onReady(() => {
 	ReactDOM.render(
 		<Root/>,
-		document.getElementById('react-app'),
+		document.getElementById('react-app')
 	)
 })
