@@ -12,8 +12,7 @@ const ArrowIcon = require('images/arrow.svg')
 const hotspotPreview = `data:image/svg+xml,%3Csvg width='152' height='66' xmlns='http://www.w3.org/2000/svg'%3E%3Cg%3E%3Crect stroke='null' x='0' y='0' fill-opacity='0.5' fill='%232d9bf0' height='140' width='140'/%3E%3C/g%3E%3C/svg%3E`
 
 type IState = {
-	personalScripts: IScript[]
-	teamScripts: IScript[],
+	scripts: IScript[]
 	currentFilter: string
 }
 
@@ -22,45 +21,37 @@ class Root extends React.Component {
 	private containerRef: any = React.createRef()
 
 	state: IState = {
-		personalScripts: [],
-		teamScripts: [],
+		scripts: [],
 		currentFilter: 'all',
 	}
 
-	componentDidMount(): void {
+	async componentDidMount() {
 		//load data from FB
+		const loadedScripts = [
+			{
+				id: '2',
+				title: 'Team script 1',
+				description: '...',
+				content: 'alert("hello 1")',
+				sharingPolicy: 'team',
+				creatorId: '',
+				teamId: '',
+			},
+			{
+				id: '3',
+				title: 'Team script 2',
+				description: '...',
+				content: 'alert("hello 2")',
+				sharingPolicy: 'team',
+				creatorId: '',
+				teamId: '',
+			},
+		]
 		this.setState({
-			personalScripts: [
-				{
-					id: '1',
-					title: 'Say hello!',
-					description: '...',
-					content: 'alert("hello")',
-					sharingPolicy: 'personal',
-					creatorId: '',
-					teamId: '',
-				},
-			],
-			teamScripts: [
-				{
-					id: '2',
-					title: 'Team script 1',
-					description: '...',
-					content: 'alert("hello 1")',
-					sharingPolicy: 'team',
-					creatorId: '',
-					teamId: '',
-				},
-				{
-					id: '3',
-					title: 'Team script 2',
-					description: '...',
-					content: 'alert("hello 2")',
-					sharingPolicy: 'team',
-					creatorId: '',
-					teamId: '',
-				},
-			],
+			scripts: loadedScripts,
+		})
+		miro.__setRuntimeState({
+			scripts: loadedScripts,
 		})
 	}
 
@@ -85,16 +76,16 @@ class Root extends React.Component {
 
 	render() {
 
-		const personalScripts = this.state.personalScripts.map(s => <div key={s.id}>
-			{s.title}
-			<button onClick={() => this.runScript(s)}>run</button>
-			<button onClick={() => this.editScript(s)}>edit</button>
-		</div>)
-		const teamScripts = this.state.teamScripts.map(s => <div key={s.id}>
-			{s.title}
-			<button onClick={() => this.runScript(s)}>run</button>
-			<button onClick={() => this.editScript(s)}>edit</button>
-		</div>)
+		// const personalScripts = this.state.personalScripts.map(s => <div key={s.id}>
+		// 	{s.title}
+		// 	<button onClick={() => this.runScript(s)}>run</button>
+		// 	<button onClick={() => this.editScript(s)}>edit</button>
+		// </div>)
+		// const teamScripts = this.state.teamScripts.map(s => <div key={s.id}>
+		// 	{s.title}
+		// 	<button onClick={() => this.runScript(s)}>run</button>
+		// 	<button onClick={() => this.editScript(s)}>edit</button>
+		// </div>)
 
 		const view = <div>
 			<h1>Scripts</h1>

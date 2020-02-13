@@ -20526,45 +20526,26 @@ var Root = /** @class */ (function (_super) {
         var _this = _super !== null && _super.apply(this, arguments) || this;
         _this.state = {
             mode: undefined,
-            script: undefined,
+            scripts: [],
+            currentScript: undefined
         };
         return _this;
     }
     Root.prototype.componentWillMount = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var url, scriptId, script;
+            var state;
             return __generator(this, function (_a) {
-                url = new URL(window.location.href);
-                scriptId = url.searchParams.get('id');
-                script = undefined;
-                if (scriptId) {
-                    // load script and set to 'script' var
-                    script = {
-                        id: '1',
-                        title: 'Say hello!',
-                        description: '...',
-                        content: 'alert("hello")',
-                        sharingPolicy: 'personal',
-                        creatorId: '',
-                        teamId: '',
-                    };
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, miro.__getRuntimeState()];
+                    case 1:
+                        state = _a.sent();
+                        this.setState({
+                            mode: 'create',
+                            scripts: state.scripts
+                        });
+                        console.log(state.scripts);
+                        return [2 /*return*/];
                 }
-                else {
-                    script = {
-                        id: '',
-                        title: 'New Script',
-                        description: '...',
-                        content: 'alert("new script")',
-                        sharingPolicy: 'personal',
-                        creatorId: '',
-                        teamId: '',
-                    };
-                }
-                this.setState({
-                    mode: scriptId ? 'edit' : 'create',
-                    script: script,
-                });
-                return [2 /*return*/];
             });
         });
     };
@@ -20579,8 +20560,7 @@ var Root = /** @class */ (function (_super) {
     Root.prototype.render = function () {
         return react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", null,
             react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("h1", null, this.state.mode === 'edit' ? 'Edit script' : 'Create script'),
-            react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", null,
-                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("textarea", { defaultValue: this.state.script.content })),
+            react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", null),
             react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("button", { onClick: this.onSave }, "Save"),
             this.state.mode === 'edit' ? react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("button", { onClick: this.onDelete }, "Delete") : null);
     };
