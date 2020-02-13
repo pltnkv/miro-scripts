@@ -3,9 +3,9 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import SVG from 'react-inlinesvg'
 import IScript from 'IScripts'
-import * as firebase from "firebase/app";
-import "firebase/firestore";
-import {firebaseConfig} from 'config';
+import * as firebase from 'firebase'
+// import "firebase/firestore";
+import {firebaseConfig} from 'config'
 
 require('./sidebar.less')
 const SquareIcon = require('images/square.svg')
@@ -23,46 +23,47 @@ class Root extends React.Component {
 
 	private containerRef: any = React.createRef()
 	private firebase: any = firebase.initializeApp(firebaseConfig)
-	private db: any =  firebase.firestore();
+	private db: any = firebase.firestore()
 
 	state: IState = {
 		scripts: [],
 		currentFilter: 'all',
 	}
 
-	async componentDidMount(): void {
+	async componentDidMount() {
 		const userId = await miro.currentUser.getId()
 		const teamId = (await miro.account.get()).id
-		const scriptsRef = this.db.collection('scripts');
-		const result  = Promise.all([
-			scriptsRef.where('creatorId', '==', userId).get(),
-			scriptsRef.where('teamId', '==', teamId).get(),
-		]);
-		let loadedScripts: Array<any> = [];
+		const scriptsRef = this.db.collection('scripts')
 
+		const personalScripts = await scriptsRef.where('creatorId', '==', userId).get()
+		const teamScripts = await scriptsRef.where('teamId', '==', teamId).get()
 
-		result.then((collection) => {
-			collection.forEach((innerCollection) => {
-				innerCollection.forEach((doc) => {
-					loadedScripts.push(doc.data());
-				});
-			});
-		});
-
-		this.setState({
-			scripts: loadedScripts,
+		const scripts:IScript[] = []
+		personalScripts.forEach((s:any) => {
+			scripts.push(s.data())
 		})
-		miro.__setRuntimeState({
-			scripts: loadedScripts,
+		teamScripts.forEach((s:any) => {
+			scripts.push(s.data())
 		})
+
+
+
+		console.log(scripts)
+
+		// const scripts = [...personalScripts, ...teamScripts]
+		//
+		//
+		//
+		// this.setState({
+		// 	scripts,
+		// })
+		// miro.__setRuntimeState({
+		// 	scripts,
+		// })
 	}
 
-	addScript() {
-		miro.board.ui.openModal('edit.html', {fullscreen: true})
-	}
-
-	editScript(s: IScript) {
-		miro.board.ui.openModal(`edit.html?id=${s.id}`, {fullscreen: true})
+	manageScripts() {
+		miro.board.ui.openModal('edit.html', {width: 800})
 	}
 
 	runScript(s: IScript) {
@@ -95,7 +96,7 @@ class Root extends React.Component {
 				<span className={this.state.currentFilter === 'all' ? 'selected' : ''} onClick={() => this.selectFilter('all')}>All</span>
 				<span className={this.state.currentFilter === 'personal' ? 'selected' : ''} onClick={() => this.selectFilter('personal')}>Personal</span>
 				<span className={this.state.currentFilter === 'team' ? 'selected' : ''} onClick={() => this.selectFilter('team')}>Team</span>
-				<span className="settings-button" onClick={this.addScript}>Manage</span>
+				<span className="settings-button" onClick={this.manageScripts}>Manage</span>
 			</div>
 			<div className="scripts-list">
 				<div className="script-block">Grid widgets</div>

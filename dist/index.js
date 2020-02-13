@@ -156,9 +156,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "APP_ID", function() { return APP_ID; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "EDIT_WIDTH", function() { return EDIT_WIDTH; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PLAY_WIDTH", function() { return PLAY_WIDTH; });
-var APP_ID = '3074457345621215481';
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "firebaseConfig", function() { return firebaseConfig; });
+var APP_ID = '3074457347243452646';
 var EDIT_WIDTH = 280;
 var PLAY_WIDTH = 320;
+var firebaseConfig = {
+    apiKey: 'AIzaSyByiI2pxHojMA4ZmLvcRW0OsiTmSXeuCRA',
+    authDomain: 'miro-scripts.firebaseapp.com',
+    projectId: 'miro-scripts'
+};
 
 
 /***/ })

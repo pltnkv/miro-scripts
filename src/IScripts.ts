@@ -1,7 +1,6 @@
 export default interface IScript {
-	id: string
+	id?: string
 	title: string
-	description: string
 	content: string
 	sharingPolicy: string
 	creatorId: string
