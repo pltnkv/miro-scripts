@@ -36,7 +36,11 @@ class Root extends React.Component {
 		const scriptsRef = this.db.collection('scripts')
 
 		const personalScripts = await scriptsRef.where('creatorId', '==', userId).get()
-		const teamScripts = await scriptsRef.where('teamId', '==', teamId).get()
+		const teamScripts = await scriptsRef
+			//Impl NOT expr. https://firebase.google.com/docs/firestore/query-data/queries#query_limitations
+			.where('creatorId', '<', userId)
+			.where('creatorId', '>', userId)
+			.where('teamId', '==', teamId).get()
 
 		const scripts:IScript[] = []
 		personalScripts.forEach((s:any) => {
