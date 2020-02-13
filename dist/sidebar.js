@@ -120,23 +120,67 @@ var Root = /** @class */ (function (_super) {
         var _this = _super !== null && _super.apply(this, arguments) || this;
         _this.containerRef = react__WEBPACK_IMPORTED_MODULE_0__["createRef"]();
         _this.state = {
-            personalScripts: [1, 2],
-            teamScripts: [3, 4]
+            personalScripts: [],
+            teamScripts: [],
         };
         return _this;
     }
-    Root.prototype.componentWillMount = function () {
-    };
     Root.prototype.componentDidMount = function () {
         //load data from FB
-        // this.setState({})
+        this.setState({
+            personalScripts: [
+                {
+                    id: '1',
+                    title: 'Say hello!',
+                    description: '...',
+                    content: 'alert("hello")',
+                    sharingPolicy: 'personal',
+                    creatorId: '',
+                    teamId: '',
+                },
+            ],
+            teamScripts: [
+                {
+                    id: '2',
+                    title: 'Team script 1',
+                    description: '...',
+                    content: 'alert("hello 1")',
+                    sharingPolicy: 'team',
+                    creatorId: '',
+                    teamId: '',
+                },
+                {
+                    id: '3',
+                    title: 'Team script 2',
+                    description: '...',
+                    content: 'alert("hello 2")',
+                    sharingPolicy: 'team',
+                    creatorId: '',
+                    teamId: '',
+                },
+            ],
+        });
     };
     Root.prototype.addScript = function () {
         miro.board.ui.openModal('edit.html');
     };
+    Root.prototype.editScript = function (s) {
+        miro.board.ui.openModal("edit.html?id=" + s.id);
+    };
+    Root.prototype.runScript = function (s) {
+        eval(s.content);
+        //todo add wrapper with onMiroScriptComplete() method
+    };
     Root.prototype.render = function () {
-        var personalScripts = this.state.personalScripts.map(function (s) { return react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", null, s); });
-        var teamScripts = this.state.teamScripts.map(function (s) { return react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", null, s); });
+        var _this = this;
+        var personalScripts = this.state.personalScripts.map(function (s) { return react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { key: s.id },
+            s.title,
+            react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("button", { onClick: function () { return _this.runScript(s); } }, "run"),
+            react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("button", { onClick: function () { return _this.editScript(s); } }, "edit")); });
+        var teamScripts = this.state.teamScripts.map(function (s) { return react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { key: s.id },
+            s.title,
+            react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("button", { onClick: function () { return _this.runScript(s); } }, "run"),
+            react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("button", { onClick: function () { return _this.editScript(s); } }, "edit")); });
         var view = react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", null,
             react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("h1", null, "Scripts"),
             react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "scripts-list" },
@@ -19995,7 +20039,7 @@ exports = module.exports = __webpack_require__(26)(false);
 
 
 // module
-exports.push([module.i, "html {\n  height: 100%;\n}\nbody {\n  height: 100%;\n  margin: 0;\n  color: #09043C;\n  font: 14px OpenSans, Arial, Helvetica, sans-serif;\n}\n* {\n  user-select: none;\n}\n#react-app {\n  height: 100%;\n}\n.scripts-list {\n  background-color: red;\n}\n", ""]);
+exports.push([module.i, "html {\n  height: 100%;\n}\nbody {\n  height: 100%;\n  margin: 0;\n  color: #09043C;\n  font: 14px OpenSans, Arial, Helvetica, sans-serif;\n}\n* {\n  user-select: none;\n}\n#react-app {\n  height: 100%;\n  padding: 24px 18px;\n  box-sizing: border-box;\n}\nh1 {\n  margin: 0;\n}\n", ""]);
 
 // exports
 
