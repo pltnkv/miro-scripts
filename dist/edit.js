@@ -19894,45 +19894,8 @@ function camelize(string) {
 module.exports = camelize;
 
 /***/ }),
-/* 24 */
-/***/ (function(module, exports, __webpack_require__) {
-
-
-var content = __webpack_require__(25);
-
-if(typeof content === 'string') content = [[module.i, content, '']];
-
-var transform;
-var insertInto;
-
-
-
-var options = {"hmr":true}
-
-options.transform = transform
-options.insertInto = undefined;
-
-var update = __webpack_require__(27)(content, options);
-
-if(content.locals) module.exports = content.locals;
-
-if(false) {}
-
-/***/ }),
-/* 25 */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(26)(false);
-// imports
-
-
-// module
-exports.push([module.i, "html {\n  height: 100%;\n}\nbody {\n  height: 100%;\n  margin: 0;\n  color: #09043C;\n  font: 14px OpenSans, Arial, Helvetica, sans-serif;\n}\n* {\n  user-select: none;\n}\n#react-app {\n  height: 100%;\n  padding: 24px 18px;\n  box-sizing: border-box;\n}\nh1 {\n  margin: 0;\n}\n", ""]);
-
-// exports
-
-
-/***/ }),
+/* 24 */,
+/* 25 */,
 /* 26 */
 /***/ (function(module, exports) {
 
@@ -20556,7 +20519,7 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
 };
 
 
-__webpack_require__(24);
+__webpack_require__(34);
 var Root = /** @class */ (function (_super) {
     __extends(Root, _super);
     function Root() {
@@ -20626,6 +20589,45 @@ var Root = /** @class */ (function (_super) {
 miro.onReady(function () {
     react_dom__WEBPACK_IMPORTED_MODULE_1__["render"](react__WEBPACK_IMPORTED_MODULE_0__["createElement"](Root, null), document.getElementById('react-app'));
 });
+
+
+/***/ }),
+/* 34 */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+var content = __webpack_require__(35);
+
+if(typeof content === 'string') content = [[module.i, content, '']];
+
+var transform;
+var insertInto;
+
+
+
+var options = {"hmr":true}
+
+options.transform = transform
+options.insertInto = undefined;
+
+var update = __webpack_require__(27)(content, options);
+
+if(content.locals) module.exports = content.locals;
+
+if(false) {}
+
+/***/ }),
+/* 35 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(26)(false);
+// imports
+
+
+// module
+exports.push([module.i, "html {\n  height: 100%;\n}\nbody {\n  height: 100%;\n  margin: 0;\n  color: #09043C;\n  font: 14px OpenSans, Arial, Helvetica, sans-serif;\n}\n#react-app {\n  height: 100%;\n  padding: 24px;\n  box-sizing: border-box;\n}\ntextarea {\n  width: 100%;\n  height: 300px;\n  padding: 20px;\n  box-sizing: border-box;\n}\n", ""]);
+
+// exports
 
 
 /***/ })

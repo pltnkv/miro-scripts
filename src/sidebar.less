@@ -1,0 +1,79 @@
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  color: #09043C;
+  font: 14px OpenSans, Arial, Helvetica, sans-serif;
+}
+
+* {
+  user-select: none;
+}
+
+#react-app {
+  height: 100%;
+  padding: 24px 0px 24px 18px;
+  box-sizing: border-box;
+}
+
+h1 {
+  margin: 0;
+}
+
+.filters {
+  margin: 16px 0 16px 0;
+  color: #827f9b;
+
+  span {
+    cursor: pointer;
+    margin-right: 8px;
+  }
+
+  span:hover {
+    color: #050038;
+  }
+
+  span.selected {
+    color: #050038;
+    padding-bottom: 4px;
+    border-bottom: solid 2px #4262ff;
+  }
+
+
+  .settings-button {
+    cursor: pointer;
+    color: #4262ff;
+    text-decoration: underline;
+    float: right;
+    margin-right: 20px !important;
+  }
+}
+
+.scripts-list {
+
+}
+
+.script-block {
+  cursor: pointer;
+  display: inline-flex;
+  vertical-align: top;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  margin-top: 8px;
+  width: 96px;
+  height: 96px;
+  background-color: #ADD8E6;
+  border-radius: 8px;
+  text-align: center;
+  box-sizing: border-box;
+  padding: 4px;
+
+  &:hover {
+    background-color: #9cc7e6;
+  }
+}
+

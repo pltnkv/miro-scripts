@@ -122,6 +122,7 @@ var Root = /** @class */ (function (_super) {
         _this.state = {
             personalScripts: [],
             teamScripts: [],
+            currentFilter: 'all',
         };
         return _this;
     }
@@ -162,14 +163,19 @@ var Root = /** @class */ (function (_super) {
         });
     };
     Root.prototype.addScript = function () {
-        miro.board.ui.openModal('edit.html');
+        miro.board.ui.openModal('edit.html', { fullscreen: true });
     };
     Root.prototype.editScript = function (s) {
-        miro.board.ui.openModal("edit.html?id=" + s.id);
+        miro.board.ui.openModal("edit.html?id=" + s.id, { fullscreen: true });
     };
     Root.prototype.runScript = function (s) {
         eval(s.content);
         //todo add wrapper with onMiroScriptComplete() method
+    };
+    Root.prototype.selectFilter = function (filter) {
+        this.setState({
+            currentFilter: filter,
+        });
     };
     Root.prototype.render = function () {
         var _this = this;
@@ -183,13 +189,16 @@ var Root = /** @class */ (function (_super) {
             react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("button", { onClick: function () { return _this.editScript(s); } }, "edit")); });
         var view = react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", null,
             react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("h1", null, "Scripts"),
+            react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "filters" },
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("span", { className: this.state.currentFilter === 'all' ? 'selected' : '', onClick: function () { return _this.selectFilter('all'); } }, "All"),
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("span", { className: this.state.currentFilter === 'personal' ? 'selected' : '', onClick: function () { return _this.selectFilter('personal'); } }, "Personal"),
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("span", { className: this.state.currentFilter === 'team' ? 'selected' : '', onClick: function () { return _this.selectFilter('team'); } }, "Team"),
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("span", { className: "settings-button", onClick: this.addScript }, "Manage")),
             react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "scripts-list" },
-                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("h3", null, "personal"),
-                personalScripts),
-            react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "scripts-list" },
-                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("h3", null, "team"),
-                teamScripts),
-            react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("button", { onClick: this.addScript }, "+ Script"));
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "script-block" }, "Grid widgets"),
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "script-block" }, "Create table"),
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "script-block" }, "Import spreadsheet"),
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "script-block" }, "Adjust stickers size")));
         return react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { ref: this.containerRef }, view);
     };
     return Root;
@@ -20039,7 +20048,7 @@ exports = module.exports = __webpack_require__(26)(false);
 
 
 // module
-exports.push([module.i, "html {\n  height: 100%;\n}\nbody {\n  height: 100%;\n  margin: 0;\n  color: #09043C;\n  font: 14px OpenSans, Arial, Helvetica, sans-serif;\n}\n* {\n  user-select: none;\n}\n#react-app {\n  height: 100%;\n  padding: 24px 18px;\n  box-sizing: border-box;\n}\nh1 {\n  margin: 0;\n}\n", ""]);
+exports.push([module.i, "html {\n  height: 100%;\n}\nbody {\n  height: 100%;\n  margin: 0;\n  color: #09043C;\n  font: 14px OpenSans, Arial, Helvetica, sans-serif;\n}\n* {\n  user-select: none;\n}\n#react-app {\n  height: 100%;\n  padding: 24px 0px 24px 18px;\n  box-sizing: border-box;\n}\nh1 {\n  margin: 0;\n}\n.filters {\n  margin: 16px 0 16px 0;\n  color: #827f9b;\n}\n.filters span {\n  cursor: pointer;\n  margin-right: 8px;\n}\n.filters span:hover {\n  color: #050038;\n}\n.filters span.selected {\n  color: #050038;\n  padding-bottom: 4px;\n  border-bottom: solid 2px #4262ff;\n}\n.filters .settings-button {\n  cursor: pointer;\n  color: #4262ff;\n  text-decoration: underline;\n  float: right;\n  margin-right: 20px !important;\n}\n.script-block {\n  cursor: pointer;\n  display: inline-flex;\n  vertical-align: top;\n  align-items: center;\n  justify-content: center;\n  margin-right: 8px;\n  margin-top: 8px;\n  width: 96px;\n  height: 96px;\n  background-color: #ADD8E6;\n  border-radius: 8px;\n  text-align: center;\n  box-sizing: border-box;\n  padding: 4px;\n}\n.script-block:hover {\n  background-color: #9cc7e6;\n}\n", ""]);
 
 // exports
 

@@ -4,7 +4,7 @@ import * as ReactDOM from 'react-dom'
 import SVG from 'react-inlinesvg'
 import IScript from 'IScripts'
 
-require('./styles.less')
+require('./sidebar.less')
 const SquareIcon = require('images/square.svg')
 const PlayIcon = require('images/play.svg')
 const LinkIcon = require('images/link.svg')
@@ -13,7 +13,8 @@ const hotspotPreview = `data:image/svg+xml,%3Csvg width='152' height='66' xmlns=
 
 type IState = {
 	personalScripts: IScript[]
-	teamScripts: IScript[]
+	teamScripts: IScript[],
+	currentFilter: string
 }
 
 class Root extends React.Component {
@@ -23,6 +24,7 @@ class Root extends React.Component {
 	state: IState = {
 		personalScripts: [],
 		teamScripts: [],
+		currentFilter: 'all',
 	}
 
 	componentDidMount(): void {
@@ -30,7 +32,7 @@ class Root extends React.Component {
 		this.setState({
 			personalScripts: [
 				{
-					id:'1',
+					id: '1',
 					title: 'Say hello!',
 					description: '...',
 					content: 'alert("hello")',
@@ -41,7 +43,7 @@ class Root extends React.Component {
 			],
 			teamScripts: [
 				{
-					id:'2',
+					id: '2',
 					title: 'Team script 1',
 					description: '...',
 					content: 'alert("hello 1")',
@@ -50,7 +52,7 @@ class Root extends React.Component {
 					teamId: '',
 				},
 				{
-					id:'3',
+					id: '3',
 					title: 'Team script 2',
 					description: '...',
 					content: 'alert("hello 2")',
@@ -63,16 +65,22 @@ class Root extends React.Component {
 	}
 
 	addScript() {
-		miro.board.ui.openModal('edit.html')
+		miro.board.ui.openModal('edit.html', {fullscreen: true})
 	}
 
-	editScript(s:IScript) {
-		miro.board.ui.openModal(`edit.html?id=${s.id}`)
+	editScript(s: IScript) {
+		miro.board.ui.openModal(`edit.html?id=${s.id}`, {fullscreen: true})
 	}
 
 	runScript(s: IScript) {
 		eval(s.content)
 		//todo add wrapper with onMiroScriptComplete() method
+	}
+
+	selectFilter(filter: string) {
+		this.setState({
+			currentFilter: filter,
+		})
 	}
 
 	render() {
@@ -90,15 +98,18 @@ class Root extends React.Component {
 
 		const view = <div>
 			<h1>Scripts</h1>
-			<div className="scripts-list">
-				<h3>personal</h3>
-				{personalScripts}
+			<div className="filters">
+				<span className={this.state.currentFilter === 'all' ? 'selected' : ''} onClick={() => this.selectFilter('all')}>All</span>
+				<span className={this.state.currentFilter === 'personal' ? 'selected' : ''} onClick={() => this.selectFilter('personal')}>Personal</span>
+				<span className={this.state.currentFilter === 'team' ? 'selected' : ''} onClick={() => this.selectFilter('team')}>Team</span>
+				<span className="settings-button" onClick={this.addScript}>Manage</span>
 			</div>
 			<div className="scripts-list">
-				<h3>team</h3>
-				{teamScripts}
+				<div className="script-block">Grid widgets</div>
+				<div className="script-block">Create table</div>
+				<div className="script-block">Import spreadsheet</div>
+				<div className="script-block">Adjust stickers size</div>
 			</div>
-			<button onClick={this.addScript}>+ Script</button>
 		</div>
 
 		return <div ref={this.containerRef}>{view}</div>
