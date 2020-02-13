@@ -3,6 +3,9 @@ import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import SVG from 'react-inlinesvg'
 import IScript from 'IScripts'
+import * as firebase from "firebase/app";
+import "firebase/firestore";
+import {firebaseConfig} from 'config';
 
 require('./sidebar.less')
 const SquareIcon = require('images/square.svg')
@@ -19,34 +22,33 @@ type IState = {
 class Root extends React.Component {
 
 	private containerRef: any = React.createRef()
+	private firebase: any = firebase.initializeApp(firebaseConfig)
+	private db: any =  firebase.firestore();
 
 	state: IState = {
 		scripts: [],
 		currentFilter: 'all',
 	}
 
-	async componentDidMount() {
-		//load data from FB
-		const loadedScripts = [
-			{
-				id: '2',
-				title: 'Team script 1',
-				description: '...',
-				content: 'alert("hello 1")',
-				sharingPolicy: 'team',
-				creatorId: '',
-				teamId: '',
-			},
-			{
-				id: '3',
-				title: 'Team script 2',
-				description: '...',
-				content: 'alert("hello 2")',
-				sharingPolicy: 'team',
-				creatorId: '',
-				teamId: '',
-			},
-		]
+	async componentDidMount(): void {
+		const userId = await miro.currentUser.getId()
+		const teamId = (await miro.account.get()).id
+		const scriptsRef = this.db.collection('scripts');
+		const result  = Promise.all([
+			scriptsRef.where('creatorId', '==', userId).get(),
+			scriptsRef.where('teamId', '==', teamId).get(),
+		]);
+		let loadedScripts: Array<any> = [];
+
+
+		result.then((collection) => {
+			collection.forEach((innerCollection) => {
+				innerCollection.forEach((doc) => {
+					loadedScripts.push(doc.data());
+				});
+			});
+		});
+
 		this.setState({
 			scripts: loadedScripts,
 		})
