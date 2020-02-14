@@ -74103,12 +74103,13 @@ var Root = /** @class */ (function (_super) {
         if (close === void 0) { close = true; }
         miro.showNotification('Saving...');
         var scriptRef = db.collection('scripts').doc(this.state.currentScript.id);
+        var scriptTitle = this.state.currentScript.title;
         scriptRef.set(this.state.currentScript)
             .then(function () { return __awaiter(_this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        miro.showNotification('Script has been saved');
+                        miro.showNotification("Script '" + scriptTitle + "' has been saved");
                         return [4 /*yield*/, this.dispatchScriptsUpdated()];
                     case 1:
                         _a.sent();
@@ -74126,12 +74127,13 @@ var Root = /** @class */ (function (_super) {
     Root.prototype.onDelete = function () {
         var _this = this;
         miro.showNotification('Deleting...');
+        var scriptTitle = this.state.currentScript.title;
         var scriptRef = db.collection('scripts').doc(this.state.currentScript.id);
         scriptRef.delete()
             .then(function () { return __awaiter(_this, void 0, void 0, function () {
             var _this = this;
             return __generator(this, function (_a) {
-                miro.showNotification('Script has been deleted');
+                miro.showNotification("Script '" + scriptTitle + "' has been deleted");
                 this.setState({
                     currentScript: newScript,
                     scripts: this.state.scripts.filter(function (s) { return s.id !== _this.state.currentScript.id; }),

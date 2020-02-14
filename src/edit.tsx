@@ -95,9 +95,10 @@ class Root extends React.Component {
 	onSave(close = true) {
 		miro.showNotification('Saving...')
 		let scriptRef = db.collection('scripts').doc(this.state.currentScript.id)
+		let scriptTitle = this.state.currentScript.title
 		scriptRef.set(this.state.currentScript)
 			.then(async () => {
-				miro.showNotification('Script has been saved')
+				miro.showNotification(`Script '${scriptTitle}' has been saved`)
 				await this.dispatchScriptsUpdated()
 				if(close) {
 					miro.board.ui.closeModal()
@@ -110,10 +111,11 @@ class Root extends React.Component {
 
 	onDelete() {
 		miro.showNotification('Deleting...')
+		let scriptTitle = this.state.currentScript.title
 		let scriptRef = db.collection('scripts').doc(this.state.currentScript.id)
 		scriptRef.delete()
 			.then(async () => {
-				miro.showNotification('Script has been deleted')
+				miro.showNotification(`Script '${scriptTitle}' has been deleted`)
 				this.setState({
 					currentScript: newScript,
 					scripts: this.state.scripts.filter(s => s.id !== this.state.currentScript.id),
