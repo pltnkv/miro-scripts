@@ -72,7 +72,7 @@ class Root extends React.Component {
 
 	runScript(s: IScript) {
 		try {
-			eval(s.content)
+			eval(`(async () => { ${s.content} })()`)
 		} catch (e) {
 			console.error(e)
 			miro.showErrorNotification(`There is some error in '${s.title}' script`)

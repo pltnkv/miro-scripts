@@ -13,6 +13,7 @@ type IState = {
 	hidden: boolean //no blink when create script
 	scripts: IScript[]
 	currentScript: IScript
+	currentScriptModified: boolean
 }
 
 function gerRandomColor(): string {
@@ -36,6 +37,7 @@ class Root extends React.Component {
 		hidden: false,
 		scripts: [],
 		currentScript: newScript,
+		currentScriptModified: false,
 	}
 
 	async componentWillMount() {
@@ -50,9 +52,13 @@ class Root extends React.Component {
 	}
 
 	private onScriptSelect(s: IScript) {
+		if(this.state.currentScript !== newScript && this.state.currentScriptModified) {
+			this.onSave(false)
+		}
 		this.setState({
 			...this.state,
 			currentScript: s,
+			currentScriptModified: false
 		})
 	}
 
@@ -86,15 +92,16 @@ class Root extends React.Component {
 			})
 	}
 
-	onSave() {
+	onSave(close = true) {
 		miro.showNotification('Saving...')
 		let scriptRef = db.collection('scripts').doc(this.state.currentScript.id)
 		scriptRef.set(this.state.currentScript)
 			.then(async () => {
 				miro.showNotification('Script has been saved')
 				await this.dispatchScriptsUpdated()
-				miro.board.ui.closeModal()
-
+				if(close) {
+					miro.board.ui.closeModal()
+				}
 			})
 			.catch(() => {
 				miro.showErrorNotification('Can\'t save script')
@@ -119,6 +126,7 @@ class Root extends React.Component {
 		this.state.currentScript.title = e.target.value
 		this.setState({
 			currentScript: this.state.currentScript,
+			currentScriptModified: true
 		})
 	}
 
@@ -126,6 +134,7 @@ class Root extends React.Component {
 		this.state.currentScript.content = e.target.value
 		this.setState({
 			currentScript: this.state.currentScript,
+			currentScriptModified: true
 		})
 	}
 
@@ -133,6 +142,7 @@ class Root extends React.Component {
 		this.state.currentScript.color = e.target.value
 		this.setState({
 			currentScript: this.state.currentScript,
+			currentScriptModified: true
 		})
 	}
 
@@ -140,6 +150,7 @@ class Root extends React.Component {
 		this.state.currentScript.sharingPolicy = p
 		this.setState({
 			currentScript: this.state.currentScript,
+			currentScriptModified: true
 		})
 	}
 

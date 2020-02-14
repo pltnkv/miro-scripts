@@ -260,7 +260,7 @@ var Root = /** @class */ (function (_super) {
     };
     Root.prototype.runScript = function (s) {
         try {
-            eval(s.content);
+            eval("(async () => { " + s.content + " })()");
         }
         catch (e) {
             console.error(e);

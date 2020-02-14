@@ -73976,29 +73976,34 @@ var Root = /** @class */ (function (_super) {
             hidden: false,
             scripts: [],
             currentScript: newScript,
+            currentScriptModified: false,
         };
         _this.onTitleChange = function (e) {
             _this.state.currentScript.title = e.target.value;
             _this.setState({
                 currentScript: _this.state.currentScript,
+                currentScriptModified: true
             });
         };
         _this.onContentChange = function (e) {
             _this.state.currentScript.content = e.target.value;
             _this.setState({
                 currentScript: _this.state.currentScript,
+                currentScriptModified: true
             });
         };
         _this.onColorChange = function (e) {
             _this.state.currentScript.color = e.target.value;
             _this.setState({
                 currentScript: _this.state.currentScript,
+                currentScriptModified: true
             });
         };
         _this.onSharingClick = function (p) {
             _this.state.currentScript.sharingPolicy = p;
             _this.setState({
                 currentScript: _this.state.currentScript,
+                currentScriptModified: true
             });
         };
         _this.getBlockClass = function (s) {
@@ -74040,7 +74045,10 @@ var Root = /** @class */ (function (_super) {
         });
     };
     Root.prototype.onScriptSelect = function (s) {
-        this.setState(__assign({}, this.state, { currentScript: s }));
+        if (this.state.currentScript !== newScript && this.state.currentScriptModified) {
+            this.onSave(false);
+        }
+        this.setState(__assign({}, this.state, { currentScript: s, currentScriptModified: false }));
     };
     Root.prototype.dispatchScriptsUpdated = function () {
         return __awaiter(this, void 0, void 0, function () {
@@ -74090,8 +74098,9 @@ var Root = /** @class */ (function (_super) {
             miro.showErrorNotification('Can\'t create script');
         });
     };
-    Root.prototype.onSave = function () {
+    Root.prototype.onSave = function (close) {
         var _this = this;
+        if (close === void 0) { close = true; }
         miro.showNotification('Saving...');
         var scriptRef = db.collection('scripts').doc(this.state.currentScript.id);
         scriptRef.set(this.state.currentScript)
@@ -74103,7 +74112,9 @@ var Root = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.dispatchScriptsUpdated()];
                     case 1:
                         _a.sent();
-                        miro.board.ui.closeModal();
+                        if (close) {
+                            miro.board.ui.closeModal();
+                        }
                         return [2 /*return*/];
                 }
             });
