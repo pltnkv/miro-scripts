@@ -1,7 +1,7 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import IScript from 'IScripts'
-import * as firebase from 'firebase'
+import * as firebase from 'firebase/app'
 import {firebaseConfig} from 'config'
 
 require('./edit.less')
