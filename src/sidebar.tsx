@@ -4,6 +4,7 @@ import IScript from 'IScripts'
 import * as firebase from 'firebase/app'
 import {firebaseConfig} from 'config'
 
+require("firebase/firestore")
 require('./sidebar.less')
 
 firebase.initializeApp(firebaseConfig)

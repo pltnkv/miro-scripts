@@ -4,6 +4,7 @@ import IScript from 'IScripts'
 import * as firebase from 'firebase/app'
 import {firebaseConfig} from 'config'
 
+require('firebase/firestore')
 require('./edit.less')
 
 firebase.initializeApp(firebaseConfig)
@@ -186,7 +187,11 @@ class Root extends React.Component {
 					value={this.state.currentScript.content}
 					onChange={this.onContentChange}></textarea>
 			</div>
-			{this.state.currentScript.creatorId === this.state.creatorId ? this.getCheckboxesView() : null}
+			{
+				this.state.currentScript.creatorId === this.state.creatorId
+					? this.getCheckboxesView()
+					: <p>This script created by other team member</p>
+			}
 			{this.getButtonsView()}
 		</div>
 	}
@@ -226,7 +231,12 @@ class Root extends React.Component {
 		} else {
 			return <div className="buttons">
 				<button className="miro-btn miro-btn--primary miro-btn--small" onClick={() => this.onSave()}>Save</button>
-				<button className="miro-btn miro-btn--danger miro-btn--small" onClick={() => this.onDelete()}>Delete</button>
+				{
+					this.state.currentScript.creatorId === this.state.creatorId
+						? <button className="miro-btn miro-btn--danger miro-btn--small" onClick={() => this.onDelete()}>Delete</button>
+						: null
+				}
+
 			</div>
 		}
 	}
