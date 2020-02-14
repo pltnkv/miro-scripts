@@ -1,18 +1,13 @@
-import * as copy from 'copy-to-clipboard'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
-import SVG from 'react-inlinesvg'
 import IScript from 'IScripts'
 import * as firebase from 'firebase'
-// import "firebase/firestore";
 import {firebaseConfig} from 'config'
 
 require('./sidebar.less')
-const SquareIcon = require('images/square.svg')
-const PlayIcon = require('images/play.svg')
-const LinkIcon = require('images/link.svg')
-const ArrowIcon = require('images/arrow.svg')
-const hotspotPreview = `data:image/svg+xml,%3Csvg width='152' height='66' xmlns='http://www.w3.org/2000/svg'%3E%3Cg%3E%3Crect stroke='null' x='0' y='0' fill-opacity='0.5' fill='%232d9bf0' height='140' width='140'/%3E%3C/g%3E%3C/svg%3E`
+
+firebase.initializeApp(firebaseConfig)
+const db = firebase.firestore()
 
 type IState = {
 	scripts: IScript[]
@@ -20,10 +15,6 @@ type IState = {
 }
 
 class Root extends React.Component {
-
-	private containerRef: any = React.createRef()
-	private firebase: any = firebase.initializeApp(firebaseConfig)
-	private db: any = firebase.firestore()
 
 	state: IState = {
 		scripts: [],
@@ -33,42 +24,59 @@ class Root extends React.Component {
 	async componentDidMount() {
 		const userId = await miro.currentUser.getId()
 		const teamId = (await miro.account.get()).id
-		const scriptsRef = this.db.collection('scripts')
+		const scriptsRef = db.collection('scripts')
 
 		const personalScripts = await scriptsRef.where('creatorId', '==', userId).get()
-		const teamScripts = await scriptsRef.where('teamId', '==', teamId).get()
+		const teamScripts = await scriptsRef
+		//Impl NOT expr. https://firebase.google.com/docs/firestore/query-data/queries#query_limitations
+			.where('creatorId', '<', userId)
+			.where('creatorId', '>', userId)
+			.where('teamId', '==', teamId).get()
 
-		const scripts:IScript[] = []
-		personalScripts.forEach((s:any) => {
-			scripts.push(s.data())
+		const scripts: IScript[] = []
+		personalScripts.forEach((sRef: any) => {
+			scripts.push({
+				...sRef.data(),
+				id: sRef.id,
+			})
 		})
-		teamScripts.forEach((s:any) => {
-			scripts.push(s.data())
+		teamScripts.forEach((sRef: any) => {
+			scripts.push({
+				...sRef.data(),
+				id: sRef.id,
+			})
 		})
 
-
-
-		console.log(scripts)
-
-		// const scripts = [...personalScripts, ...teamScripts]
-		//
-		//
-		//
-		// this.setState({
-		// 	scripts,
-		// })
-		// miro.__setRuntimeState({
-		// 	scripts,
-		// })
+		this.setState({
+			scripts,
+		})
+		miro.__setRuntimeState({
+			scripts,
+			userId,
+			teamId,
+		})
 	}
 
-	manageScripts() {
-		miro.board.ui.openModal('edit.html', {width: 800})
+	updateState = async () => {
+		const newState = await miro.__getRuntimeState()
+		this.setState({
+			scripts: newState.scripts,
+			currentFilter: 'all',
+		})
+	}
+
+	async manageScripts() {
+		await miro.board.ui.openModal('edit.html', {width: 1000, height: 700})
+		this.updateState()
 	}
 
 	runScript(s: IScript) {
-		eval(s.content)
-		//todo add wrapper with onMiroScriptComplete() method
+		try {
+			eval(s.content)
+		} catch (e) {
+			console.error(e)
+			miro.showErrorNotification(`There is some error in '${s.title}' script`)
+		}
 	}
 
 	selectFilter(filter: string) {
@@ -78,35 +86,33 @@ class Root extends React.Component {
 	}
 
 	render() {
+		const scriptBlocks = this.state.scripts
+			.filter(s => {
+				return this.state.currentFilter === 'personal' && s.sharingPolicy === 'none'
+					|| this.state.currentFilter === 'team' && s.sharingPolicy === 'team'
+					|| this.state.currentFilter === 'all'
+			})
+			.map(s =>
+				<div key={s.id}
+					 className="script-block"
+					 style={{backgroundColor: s.color}}
+					 onClick={() => this.runScript(s)}>
+					{s.title}
+				</div>,
+			)
 
-		// const personalScripts = this.state.personalScripts.map(s => <div key={s.id}>
-		// 	{s.title}
-		// 	<button onClick={() => this.runScript(s)}>run</button>
-		// 	<button onClick={() => this.editScript(s)}>edit</button>
-		// </div>)
-		// const teamScripts = this.state.teamScripts.map(s => <div key={s.id}>
-		// 	{s.title}
-		// 	<button onClick={() => this.runScript(s)}>run</button>
-		// 	<button onClick={() => this.editScript(s)}>edit</button>
-		// </div>)
-
-		const view = <div>
+		return <div>
 			<h1>Scripts</h1>
 			<div className="filters">
 				<span className={this.state.currentFilter === 'all' ? 'selected' : ''} onClick={() => this.selectFilter('all')}>All</span>
 				<span className={this.state.currentFilter === 'personal' ? 'selected' : ''} onClick={() => this.selectFilter('personal')}>Personal</span>
 				<span className={this.state.currentFilter === 'team' ? 'selected' : ''} onClick={() => this.selectFilter('team')}>Team</span>
-				<span className="settings-button" onClick={this.manageScripts}>Manage</span>
+				<span className="settings-button" onClick={() => this.manageScripts()}>Manage</span>
 			</div>
 			<div className="scripts-list">
-				<div className="script-block">Grid widgets</div>
-				<div className="script-block">Create table</div>
-				<div className="script-block">Import spreadsheet</div>
-				<div className="script-block">Adjust stickers size</div>
+				{scriptBlocks}
 			</div>
 		</div>
-
-		return <div ref={this.containerRef}>{view}</div>
 	}
 }
 

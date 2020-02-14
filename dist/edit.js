@@ -81,7 +81,7 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 53);
+/******/ 	return __webpack_require__(__webpack_require__.s = 49);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -73883,11 +73883,7 @@ module.exports = function (css) {
 
 
 /***/ }),
-/* 49 */,
-/* 50 */,
-/* 51 */,
-/* 52 */,
-/* 53 */
+/* 49 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -73955,57 +73951,88 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
 
 
 
-// import 'firebase/firestore'
 
-__webpack_require__(54);
+__webpack_require__(50);
+firebase__WEBPACK_IMPORTED_MODULE_2__["initializeApp"](config__WEBPACK_IMPORTED_MODULE_3__["firebaseConfig"]);
+var db = firebase__WEBPACK_IMPORTED_MODULE_2__["firestore"]();
+function gerRandomColor() {
+    var colors = ['#cb7a2a', '#cba32a', '#a3cb2a', '#52cb2a', '#2acba3', '#2a7acb', '#522acb', '#a32acb', '#cb2aa3', '#cb2a52'];
+    return colors[Math.round(Math.random() * (colors.length - 1))];
+}
 var newScript = {
+    id: 'new-id',
     title: 'New script',
-    content: 'alert(Hi!)',
-    sharingPolicy: 'personal',
+    content: "alert('Hi!')",
+    sharingPolicy: 'none',
     creatorId: '',
     teamId: '',
+    color: gerRandomColor(),
 };
 var Root = /** @class */ (function (_super) {
     __extends(Root, _super);
     function Root() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
         _this.state = {
+            hidden: false,
             scripts: [],
             currentScript: newScript,
         };
-        _this.firebase = firebase__WEBPACK_IMPORTED_MODULE_2__["initializeApp"](config__WEBPACK_IMPORTED_MODULE_3__["firebaseConfig"]);
-        _this.db = firebase__WEBPACK_IMPORTED_MODULE_2__["firestore"]();
         _this.onTitleChange = function (e) {
+            _this.state.currentScript.title = e.target.value;
             _this.setState({
-                currentScript: __assign({}, _this.state.currentScript, { title: e.target.value }),
+                currentScript: _this.state.currentScript,
             });
         };
         _this.onContentChange = function (e) {
+            _this.state.currentScript.content = e.target.value;
             _this.setState({
-                currentScript: __assign({}, _this.state.currentScript, { content: e.target.value }),
+                currentScript: _this.state.currentScript,
             });
+        };
+        _this.onColorChange = function (e) {
+            _this.state.currentScript.color = e.target.value;
+            _this.setState({
+                currentScript: _this.state.currentScript,
+            });
+        };
+        _this.onSharingClick = function (p) {
+            _this.state.currentScript.sharingPolicy = p;
+            _this.setState({
+                currentScript: _this.state.currentScript,
+            });
+        };
+        _this.getBlockClass = function (s) {
+            var cssClasses = s === newScript ? 'edit-script-block new-script-block' : 'edit-script-block';
+            if (_this.state.currentScript === s) {
+                cssClasses += ' selected';
+            }
+            return cssClasses;
+        };
+        _this.getButtonsView = function () {
+            if (_this.state.currentScript === newScript) {
+                return react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "buttons" },
+                    react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("button", { className: "miro-btn miro-btn--primary miro-btn--small", onClick: function () { return _this.onCreate(); } }, "Create"));
+            }
+            else {
+                return react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "buttons" },
+                    react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("button", { className: "miro-btn miro-btn--primary miro-btn--small", onClick: function () { return _this.onSave(); } }, "Save"),
+                    react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("button", { className: "miro-btn miro-btn--danger miro-btn--small", onClick: function () { return _this.onDelete(); } }, "Delete"));
+            }
         };
         return _this;
     }
     Root.prototype.componentWillMount = function () {
         return __awaiter(this, void 0, void 0, function () {
-            var state, userId, teamId;
+            var state;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, miro.__getRuntimeState()];
                     case 1:
                         state = _a.sent();
-                        return [4 /*yield*/, miro.currentUser.getId()];
-                    case 2:
-                        userId = _a.sent();
-                        return [4 /*yield*/, miro.account.get()];
-                    case 3:
-                        teamId = (_a.sent()).id;
-                        newScript.creatorId = userId;
-                        newScript.teamId = teamId;
+                        newScript.creatorId = state.userId;
+                        newScript.teamId = state.teamId;
                         this.setState({
-                            mode: 'create',
-                            scripts: [newScript].concat(state.scripts),
+                            scripts: state.scripts,
                         });
                         return [2 /*return*/];
                 }
@@ -74015,50 +74042,121 @@ var Root = /** @class */ (function (_super) {
     Root.prototype.onScriptSelect = function (s) {
         this.setState(__assign({}, this.state, { currentScript: s }));
     };
-    Root.prototype.onSave = function () {
-        if (this.state.currentScript === newScript) {
-            //create new
-            var scriptRef = this.db.collection('scripts').doc();
-            scriptRef.set(newScript)
-                .then(function () {
+    Root.prototype.dispatchScriptsUpdated = function () {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, miro.__setRuntimeState({
+                            scripts: this.state.scripts,
+                        })];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    Root.prototype.onCreate = function () {
+        var _this = this;
+        miro.showNotification('Creating...');
+        db.collection('scripts').add(newScript)
+            .then(function (docRef) { return __awaiter(_this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                newScript.id = docRef.id;
+                this.setState({
+                    hidden: true,
+                    currentScript: newScript,
+                    scripts: this.state.scripts.filter(function (s) { return s.id !== _this.state.currentScript.id; }),
+                });
                 miro.showNotification('Script has been created');
-                miro.board.ui.closeModal();
-            })
-                .catch(function () { miro.showErrorNotification('Can\'t save script'); });
-        }
-        else {
-            //edit
-            var scriptRef = this.db.collection('scripts').doc(this.state.currentScript.id);
-            scriptRef.set({})
-                .then(function () {
-                miro.showNotification('Saved');
-                miro.board.ui.closeModal();
-            })
-                .catch(function () { miro.showErrorNotification('Can\'t save script'); });
-        }
+                this.setState({
+                    scripts: this.state.scripts.concat([newScript]),
+                }, function () { return __awaiter(_this, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0: return [4 /*yield*/, this.dispatchScriptsUpdated()];
+                            case 1:
+                                _a.sent();
+                                miro.board.ui.closeModal();
+                                return [2 /*return*/];
+                        }
+                    });
+                }); });
+                return [2 /*return*/];
+            });
+        }); })
+            .catch(function () {
+            miro.showErrorNotification('Can\'t create script');
+        });
+    };
+    Root.prototype.onSave = function () {
+        var _this = this;
+        miro.showNotification('Saving...');
+        var scriptRef = db.collection('scripts').doc(this.state.currentScript.id);
+        scriptRef.set(this.state.currentScript)
+            .then(function () { return __awaiter(_this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        miro.showNotification('Script has been saved');
+                        return [4 /*yield*/, this.dispatchScriptsUpdated()];
+                    case 1:
+                        _a.sent();
+                        miro.board.ui.closeModal();
+                        return [2 /*return*/];
+                }
+            });
+        }); })
+            .catch(function () {
+            miro.showErrorNotification('Can\'t save script');
+        });
     };
     Root.prototype.onDelete = function () {
-        // let scriptRef = this.db.collection('scripts').doc(scriptId)
-        // scriptRef.delete()
-        // 	.then(() => {miro.board.ui.closeModal()})
-        // 	.catch(() => {miro.showErrorNotification('Can\'t delete script')})
+        var _this = this;
+        miro.showNotification('Deleting...');
+        var scriptRef = db.collection('scripts').doc(this.state.currentScript.id);
+        scriptRef.delete()
+            .then(function () { return __awaiter(_this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                miro.showNotification('Script has been deleted');
+                this.setState({
+                    currentScript: newScript,
+                    scripts: this.state.scripts.filter(function (s) { return s.id !== _this.state.currentScript.id; }),
+                }, function () { return _this.dispatchScriptsUpdated(); });
+                return [2 /*return*/];
+            });
+        }); })
+            .catch(function () { miro.showErrorNotification('Can\'t delete script'); });
     };
     Root.prototype.render = function () {
         var _this = this;
-        var getBlockClass = function (s) {
-            var cssClasses = s.id === '' ? 'edit-script-block new-script-block' : 'edit-script-block';
-            if (_this.state.currentScript === s) {
-                cssClasses += ' selected';
-            }
-            return cssClasses;
-        };
-        var scriptBlocks = this.state.scripts.map(function (s) { return react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { key: s.id, className: getBlockClass(s), onClick: function () { return _this.onScriptSelect(s); } }, s.title); });
+        if (this.state.hidden) {
+            return null;
+        }
+        var scriptsWithNew = [newScript].concat(this.state.scripts);
+        var scriptBlocks = scriptsWithNew.map(function (s) {
+            return react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { key: s.id, className: _this.getBlockClass(s), style: { backgroundColor: s === newScript ? 'transparent' : s.color }, onClick: function () { return _this.onScriptSelect(s); } }, s.title);
+        });
         return react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", null,
             react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: 'header' }, scriptBlocks),
             react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", null,
-                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("input", { value: this.state.currentScript.title, onChange: this.onTitleChange }),
-                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("textarea", { value: this.state.currentScript.content, onChange: this.onContentChange })),
-            react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("button", { onClick: function () { return _this.onSave(); } }, "Save"));
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("input", { className: "script-title miro-input miro-input--primary miro-input--small", placeholder: "Enter script title", value: this.state.currentScript.title, onChange: this.onTitleChange }),
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("input", { className: "color-picker", type: "color", value: this.state.currentScript.color, onChange: this.onColorChange }),
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("textarea", { placeholder: "// write some code here", value: this.state.currentScript.content, onChange: this.onContentChange })),
+            this.getCheckboxesView(),
+            this.getButtonsView());
+    };
+    Root.prototype.getCheckboxesView = function () {
+        var _this = this;
+        return react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "sharing-policy" },
+            react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("label", { className: "miro-radiobutton" },
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("input", { type: "radio", value: "0", name: "radio", checked: this.state.currentScript.sharingPolicy !== 'team', onClick: function () { return _this.onSharingClick('none'); } }),
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("span", null, "Personal usage")),
+            react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("label", { className: "miro-radiobutton" },
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("input", { type: "radio", value: "1", name: "radio", checked: this.state.currentScript.sharingPolicy === 'team', onClick: function () { return _this.onSharingClick('team'); } }),
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("span", null, "Shared for team")));
     };
     return Root;
 }(react__WEBPACK_IMPORTED_MODULE_0__["Component"]));
@@ -74068,11 +74166,11 @@ miro.onReady(function () {
 
 
 /***/ }),
-/* 54 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
-var content = __webpack_require__(55);
+var content = __webpack_require__(51);
 
 if(typeof content === 'string') content = [[module.i, content, '']];
 
@@ -74093,7 +74191,7 @@ if(content.locals) module.exports = content.locals;
 if(false) {}
 
 /***/ }),
-/* 55 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(46)(false);
@@ -74101,7 +74199,7 @@ exports = module.exports = __webpack_require__(46)(false);
 
 
 // module
-exports.push([module.i, "html {\n  height: 100%;\n}\nbody {\n  height: 100%;\n  margin: 0;\n  color: #09043C;\n  font: 14px OpenSans, Arial, Helvetica, sans-serif;\n}\n#react-app {\n  height: 100%;\n  padding: 24px;\n  box-sizing: border-box;\n}\n.header {\n  margin: 0 0 20px 0;\n}\n.edit-script-block {\n  cursor: pointer;\n  display: inline-flex;\n  vertical-align: top;\n  align-items: center;\n  justify-content: center;\n  margin-right: 8px;\n  margin-top: 8px;\n  width: 96px;\n  height: 96px;\n  background-color: #ADD8E6;\n  border-radius: 8px;\n  text-align: center;\n  box-sizing: border-box;\n  padding: 4px;\n  border: 4px solid transparent;\n}\n.edit-script-block:hover {\n  background-color: #9cc7e6;\n}\n.edit-script-block.selected {\n  border: 4px solid #4262ff;\n}\n.new-script-block {\n  background-color: transparent !important;\n  border: #9cc7e6 dashed 1px;\n}\ntextarea {\n  width: 100%;\n  height: 300px;\n  padding: 20px;\n  box-sizing: border-box;\n}\n", ""]);
+exports.push([module.i, "html {\n  height: 100%;\n}\nbody {\n  height: 100%;\n  margin: 0;\n  color: #09043C;\n  font: 14px OpenSans, Arial, Helvetica, sans-serif;\n  background-color: transparent !important;\n}\n#react-app {\n  height: 100%;\n  padding: 40px;\n  box-sizing: border-box;\n}\n.header {\n  margin: 0 0 20px 0;\n}\n.edit-script-block {\n  cursor: pointer;\n  display: inline-flex;\n  vertical-align: top;\n  align-items: start;\n  justify-content: left;\n  margin-right: 8px;\n  margin-top: 8px;\n  width: 96px;\n  height: 96px;\n  background-color: #ADD8E6;\n  border-radius: 8px;\n  box-sizing: border-box;\n  border: 4px solid transparent;\n  padding: 12px 4px 4px 12px;\n  color: #FFF;\n}\n.edit-script-block:hover {\n  color: #333;\n}\n.edit-script-block.selected {\n  border: 4px solid #4262ff;\n}\n.script-title {\n  width: 380px;\n}\n.new-script-block {\n  background-color: transparent !important;\n  border: #9cc7e6 dashed 1px;\n  color: #333;\n}\ntextarea {\n  width: 100%;\n  height: 300px;\n  margin-top: 20px;\n  outline: none;\n  border-radius: 4px;\n  box-sizing: border-box;\n  padding: 6px 14px 9px;\n  color: #050038;\n  border-color: #c3c2cf;\n  font-family: monospace;\n  font-size: 14px;\n}\ntextarea:hover {\n  border-color: #827f9b;\n}\ntextarea:focus {\n  border-color: #6881ff;\n}\n.color-picker {\n  margin-left: 8px;\n  width: 36px;\n  height: 36px;\n  border-radius: 4px;\n  box-sizing: border-box;\n  cursor: pointer;\n}\n.sharing-policy {\n  margin-top: 20px;\n}\n.sharing-policy label {\n  display: block;\n  margin-top: 8px;\n}\n.buttons {\n  margin-top: 24px;\n}\n", ""]);
 
 // exports
 

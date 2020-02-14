@@ -128,6 +128,14 @@ var __extends = (undefined && undefined.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
+var __assign = (undefined && undefined.__assign) || Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+        s = arguments[i];
+        for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+            t[p] = s[p];
+    }
+    return t;
+};
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -166,25 +174,33 @@ var __generator = (undefined && undefined.__generator) || function (thisArg, bod
 
 
 
-// import "firebase/firestore";
 
 __webpack_require__(44);
-var SquareIcon = __webpack_require__(49);
-var PlayIcon = __webpack_require__(50);
-var LinkIcon = __webpack_require__(51);
-var ArrowIcon = __webpack_require__(52);
-var hotspotPreview = "data:image/svg+xml,%3Csvg width='152' height='66' xmlns='http://www.w3.org/2000/svg'%3E%3Cg%3E%3Crect stroke='null' x='0' y='0' fill-opacity='0.5' fill='%232d9bf0' height='140' width='140'/%3E%3C/g%3E%3C/svg%3E";
+firebase__WEBPACK_IMPORTED_MODULE_2__["initializeApp"](config__WEBPACK_IMPORTED_MODULE_3__["firebaseConfig"]);
+var db = firebase__WEBPACK_IMPORTED_MODULE_2__["firestore"]();
 var Root = /** @class */ (function (_super) {
     __extends(Root, _super);
     function Root() {
         var _this = _super !== null && _super.apply(this, arguments) || this;
-        _this.containerRef = react__WEBPACK_IMPORTED_MODULE_0__["createRef"]();
-        _this.firebase = firebase__WEBPACK_IMPORTED_MODULE_2__["initializeApp"](config__WEBPACK_IMPORTED_MODULE_3__["firebaseConfig"]);
-        _this.db = firebase__WEBPACK_IMPORTED_MODULE_2__["firestore"]();
         _this.state = {
             scripts: [],
             currentFilter: 'all',
         };
+        _this.updateState = function () { return __awaiter(_this, void 0, void 0, function () {
+            var newState;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, miro.__getRuntimeState()];
+                    case 1:
+                        newState = _a.sent();
+                        this.setState({
+                            scripts: newState.scripts,
+                            currentFilter: 'all',
+                        });
+                        return [2 /*return*/];
+                }
+            });
+        }); };
         return _this;
     }
     Root.prototype.componentDidMount = function () {
@@ -198,32 +214,58 @@ var Root = /** @class */ (function (_super) {
                         return [4 /*yield*/, miro.account.get()];
                     case 2:
                         teamId = (_a.sent()).id;
-                        scriptsRef = this.db.collection('scripts');
+                        scriptsRef = db.collection('scripts');
                         return [4 /*yield*/, scriptsRef.where('creatorId', '==', userId).get()];
                     case 3:
                         personalScripts = _a.sent();
-                        return [4 /*yield*/, scriptsRef.where('teamId', '==', teamId).get()];
+                        return [4 /*yield*/, scriptsRef
+                                //Impl NOT expr. https://firebase.google.com/docs/firestore/query-data/queries#query_limitations
+                                .where('creatorId', '<', userId)
+                                .where('creatorId', '>', userId)
+                                .where('teamId', '==', teamId).get()];
                     case 4:
                         teamScripts = _a.sent();
                         scripts = [];
-                        personalScripts.forEach(function (s) {
-                            scripts.push(s.data());
+                        personalScripts.forEach(function (sRef) {
+                            scripts.push(__assign({}, sRef.data(), { id: sRef.id }));
                         });
-                        teamScripts.forEach(function (s) {
-                            scripts.push(s.data());
+                        teamScripts.forEach(function (sRef) {
+                            scripts.push(__assign({}, sRef.data(), { id: sRef.id }));
                         });
-                        console.log(scripts);
+                        this.setState({
+                            scripts: scripts,
+                        });
+                        miro.__setRuntimeState({
+                            scripts: scripts,
+                            userId: userId,
+                            teamId: teamId,
+                        });
                         return [2 /*return*/];
                 }
             });
         });
     };
     Root.prototype.manageScripts = function () {
-        miro.board.ui.openModal('edit.html', { width: 800 });
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, miro.board.ui.openModal('edit.html', { width: 1000, height: 700 })];
+                    case 1:
+                        _a.sent();
+                        this.updateState();
+                        return [2 /*return*/];
+                }
+            });
+        });
     };
     Root.prototype.runScript = function (s) {
-        eval(s.content);
-        //todo add wrapper with onMiroScriptComplete() method
+        try {
+            eval(s.content);
+        }
+        catch (e) {
+            console.error(e);
+            miro.showErrorNotification("There is some error in '" + s.title + "' script");
+        }
     };
     Root.prototype.selectFilter = function (filter) {
         this.setState({
@@ -231,30 +273,24 @@ var Root = /** @class */ (function (_super) {
         });
     };
     Root.prototype.render = function () {
-        // const personalScripts = this.state.personalScripts.map(s => <div key={s.id}>
-        // 	{s.title}
-        // 	<button onClick={() => this.runScript(s)}>run</button>
-        // 	<button onClick={() => this.editScript(s)}>edit</button>
-        // </div>)
-        // const teamScripts = this.state.teamScripts.map(s => <div key={s.id}>
-        // 	{s.title}
-        // 	<button onClick={() => this.runScript(s)}>run</button>
-        // 	<button onClick={() => this.editScript(s)}>edit</button>
-        // </div>)
         var _this = this;
-        var view = react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", null,
+        var scriptBlocks = this.state.scripts
+            .filter(function (s) {
+            return _this.state.currentFilter === 'personal' && s.sharingPolicy === 'none'
+                || _this.state.currentFilter === 'team' && s.sharingPolicy === 'team'
+                || _this.state.currentFilter === 'all';
+        })
+            .map(function (s) {
+            return react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { key: s.id, className: "script-block", style: { backgroundColor: s.color }, onClick: function () { return _this.runScript(s); } }, s.title);
+        });
+        return react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", null,
             react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("h1", null, "Scripts"),
             react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "filters" },
                 react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("span", { className: this.state.currentFilter === 'all' ? 'selected' : '', onClick: function () { return _this.selectFilter('all'); } }, "All"),
                 react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("span", { className: this.state.currentFilter === 'personal' ? 'selected' : '', onClick: function () { return _this.selectFilter('personal'); } }, "Personal"),
                 react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("span", { className: this.state.currentFilter === 'team' ? 'selected' : '', onClick: function () { return _this.selectFilter('team'); } }, "Team"),
-                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("span", { className: "settings-button", onClick: this.manageScripts }, "Manage")),
-            react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "scripts-list" },
-                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "script-block" }, "Grid widgets"),
-                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "script-block" }, "Create table"),
-                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "script-block" }, "Import spreadsheet"),
-                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "script-block" }, "Adjust stickers size")));
-        return react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { ref: this.containerRef }, view);
+                react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("span", { className: "settings-button", onClick: function () { return _this.manageScripts(); } }, "Manage")),
+            react__WEBPACK_IMPORTED_MODULE_0__["createElement"]("div", { className: "scripts-list" }, scriptBlocks));
     };
     return Root;
 }(react__WEBPACK_IMPORTED_MODULE_0__["Component"]));
@@ -73508,7 +73544,7 @@ exports = module.exports = __webpack_require__(46)(false);
 
 
 // module
-exports.push([module.i, "html {\n  height: 100%;\n}\nbody {\n  height: 100%;\n  margin: 0;\n  color: #09043C;\n  font: 14px OpenSans, Arial, Helvetica, sans-serif;\n}\n* {\n  user-select: none;\n}\n#react-app {\n  height: 100%;\n  padding: 24px 0px 24px 18px;\n  box-sizing: border-box;\n}\nh1 {\n  margin: 0;\n  height: 44px;\n  font-size: 24px;\n  font-weight: 500;\n}\n.filters {\n  margin: 16px 0 16px 0;\n  color: #827f9b;\n}\n.filters span {\n  cursor: pointer;\n  margin-right: 8px;\n}\n.filters span:hover {\n  color: #050038;\n}\n.filters span.selected {\n  color: #050038;\n  padding-bottom: 4px;\n  border-bottom: solid 2px #4262ff;\n}\n.filters .settings-button {\n  cursor: pointer;\n  color: #4262ff;\n  text-decoration: underline;\n  float: right;\n  margin-right: 20px !important;\n}\n.script-block {\n  cursor: pointer;\n  display: inline-flex;\n  vertical-align: top;\n  align-items: center;\n  justify-content: center;\n  margin-right: 8px;\n  margin-top: 8px;\n  width: 96px;\n  height: 96px;\n  background-color: #ADD8E6;\n  border-radius: 8px;\n  text-align: center;\n  box-sizing: border-box;\n  padding: 4px;\n}\n.script-block:hover {\n  background-color: #9cc7e6;\n}\n", ""]);
+exports.push([module.i, "html {\n  height: 100%;\n}\nbody {\n  height: 100%;\n  margin: 0;\n  color: #09043C;\n  font: 14px OpenSans, Arial, Helvetica, sans-serif;\n}\n* {\n  user-select: none;\n}\n#react-app {\n  height: 100%;\n  padding: 24px 0px 24px 18px;\n  box-sizing: border-box;\n}\nh1 {\n  margin: 0;\n  height: 44px;\n  font-size: 24px;\n  font-weight: 500;\n}\n.filters {\n  margin: 16px 0 16px 0;\n  color: #827f9b;\n}\n.filters span {\n  cursor: pointer;\n  margin-right: 10px;\n}\n.filters span:hover {\n  color: #050038;\n}\n.filters span.selected {\n  color: #050038;\n  padding-bottom: 4px;\n  border-bottom: solid 2px #4262ff;\n}\n.filters .settings-button {\n  cursor: pointer;\n  color: #4262ff;\n  text-decoration: underline;\n  float: right;\n  margin-right: 20px !important;\n}\n.script-block {\n  cursor: pointer;\n  display: inline-flex;\n  vertical-align: top;\n  align-items: start;\n  justify-content: left;\n  margin-right: 8px;\n  margin-top: 8px;\n  width: 96px;\n  height: 96px;\n  background-color: #6ec6e2;\n  border-radius: 8px;\n  box-sizing: border-box;\n  padding: 12px 4px 4px 12px;\n  color: #FFF;\n  border: 1px solid transparent;\n}\n.script-block:hover {\n  color: #333;\n}\n", ""]);
 
 // exports
 
@@ -74075,30 +74111,6 @@ module.exports = function (css) {
 	return fixedCss;
 };
 
-
-/***/ }),
-/* 49 */
-/***/ (function(module, exports) {
-
-module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"#96cdf7\" fill-rule=\"evenodd\" stroke=\"currentColor\" stroke-width=\"2\" d=\"M3 3h18v18H3z\"></path></svg>"
-
-/***/ }),
-/* 50 */
-/***/ (function(module, exports) {
-
-module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><g fill=\"none\" fill-rule=\"evenodd\"><circle cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" stroke-width=\"2\"></circle><path fill=\"currentColor\" d=\"M10.777 8.518l4.599 3.066a.5.5 0 0 1 0 .832l-4.599 3.066a.5.5 0 0 1-.777-.416V8.934a.5.5 0 0 1 .777-.416z\"></path></g></svg>"
-
-/***/ }),
-/* 51 */
-/***/ (function(module, exports) {
-
-module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><g fill=\"currentColor\" fill-rule=\"evenodd\"><path fill-rule=\"nonzero\" d=\"M15.182 13.768a1 1 0 0 1 0-1.414l3.89-3.89c.78-.78.427-2.4-.354-3.182-.782-.78-2.401-1.134-3.182-.353l-3.89 3.889a1 1 0 0 1-1.414-1.414l3.89-3.89c1.561-1.561 4.448-1.208 6.01.354 1.562 1.562 1.915 4.449.353 6.01l-3.889 3.89a1 1 0 0 1-1.414 0z\"></path><path d=\"M15.536 7.05l1.414 1.414-8.486 8.486-1.414-1.414z\"></path><path fill-rule=\"nonzero\" d=\"M8.464 10.586a1 1 0 0 1 0 1.414L4.93 15.536c-.781.78-.428 2.4.353 3.182.782.78 2.401 1.134 3.182.353L12 15.536a1 1 0 0 1 1.414 1.414L9.88 20.485c-1.562 1.562-4.449 1.209-6.01-.353-1.563-1.562-1.916-4.449-.354-6.01l3.535-3.536a1 1 0 0 1 1.414 0z\"></path></g></svg>"
-
-/***/ }),
-/* 52 */
-/***/ (function(module, exports) {
-
-module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><path fill=\"currentColor\" fill-rule=\"nonzero\" d=\"M15.707 5.707a1 1 0 1 0-1.414-1.414L6.586 12l7.707 7.707a1 1 0 0 0 1.414-1.414L9.414 12l6.293-6.293z\"></path></svg>"
 
 /***/ })
 /******/ ]);
