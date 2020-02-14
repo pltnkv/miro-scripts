@@ -10,7 +10,8 @@ firebase.initializeApp(firebaseConfig)
 const db = firebase.firestore()
 
 type IState = {
-	hidden: boolean //no blink when create script
+	creatorId: string
+	hidden: boolean //hack — no blink when create script
 	scripts: IScript[]
 	currentScript: IScript
 	currentScriptModified: boolean
@@ -24,7 +25,7 @@ function gerRandomColor(): string {
 const newScript: IScript = {
 	id: 'new-id',
 	title: 'New script',
-	content: "alert('Hi!')",
+	content: 'alert(\'Hi!\')',
 	sharingPolicy: 'none',
 	creatorId: '',
 	teamId: '',
@@ -34,6 +35,7 @@ const newScript: IScript = {
 class Root extends React.Component {
 
 	state: IState = {
+		creatorId: '',
 		hidden: false,
 		scripts: [],
 		currentScript: newScript,
@@ -47,18 +49,19 @@ class Root extends React.Component {
 		newScript.teamId = state.teamId
 
 		this.setState({
+			creatorId: state.userId,
 			scripts: state.scripts,
 		})
 	}
 
 	private onScriptSelect(s: IScript) {
-		if(this.state.currentScript !== newScript && this.state.currentScriptModified) {
+		if (this.state.currentScript !== newScript && this.state.currentScriptModified) {
 			this.onSave(false)
 		}
 		this.setState({
 			...this.state,
 			currentScript: s,
-			currentScriptModified: false
+			currentScriptModified: false,
 		})
 	}
 
@@ -100,7 +103,7 @@ class Root extends React.Component {
 			.then(async () => {
 				miro.showNotification(`Script '${scriptTitle}' has been saved`)
 				await this.dispatchScriptsUpdated()
-				if(close) {
+				if (close) {
 					miro.board.ui.closeModal()
 				}
 			})
@@ -128,7 +131,7 @@ class Root extends React.Component {
 		this.state.currentScript.title = e.target.value
 		this.setState({
 			currentScript: this.state.currentScript,
-			currentScriptModified: true
+			currentScriptModified: true,
 		})
 	}
 
@@ -136,7 +139,7 @@ class Root extends React.Component {
 		this.state.currentScript.content = e.target.value
 		this.setState({
 			currentScript: this.state.currentScript,
-			currentScriptModified: true
+			currentScriptModified: true,
 		})
 	}
 
@@ -144,7 +147,7 @@ class Root extends React.Component {
 		this.state.currentScript.color = e.target.value
 		this.setState({
 			currentScript: this.state.currentScript,
-			currentScriptModified: true
+			currentScriptModified: true,
 		})
 	}
 
@@ -152,7 +155,7 @@ class Root extends React.Component {
 		this.state.currentScript.sharingPolicy = p
 		this.setState({
 			currentScript: this.state.currentScript,
-			currentScriptModified: true
+			currentScriptModified: true,
 		})
 	}
 
@@ -183,7 +186,7 @@ class Root extends React.Component {
 					value={this.state.currentScript.content}
 					onChange={this.onContentChange}></textarea>
 			</div>
-			{this.getCheckboxesView()}
+			{this.state.currentScript.creatorId === this.state.creatorId ? this.getCheckboxesView() : null}
 			{this.getButtonsView()}
 		</div>
 	}

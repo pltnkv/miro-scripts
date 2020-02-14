@@ -24,27 +24,29 @@ class Root extends React.Component {
 	async componentDidMount() {
 		const userId = await miro.currentUser.getId()
 		const teamId = (await miro.account.get()).id
-		const scriptsRef = db.collection('scripts')
 
-		const personalScripts = await scriptsRef.where('creatorId', '==', userId).get()
-		const teamScripts = await scriptsRef
-		//Impl NOT expr. https://firebase.google.com/docs/firestore/query-data/queries#query_limitations
-			.where('creatorId', '<', userId)
-			.where('creatorId', '>', userId)
+		const personalScripts = await db.collection('scripts')
+			.where('sharingPolicy', '==', 'none')
+			.where('creatorId', '==', userId).get()
+
+		const teamScripts = await db.collection('scripts')
+			.where('sharingPolicy', '==', 'team')
 			.where('teamId', '==', teamId).get()
 
 		const scripts: IScript[] = []
-		personalScripts.forEach((sRef: any) => {
-			scripts.push({
-				...sRef.data(),
-				id: sRef.id,
-			})
-		})
 		teamScripts.forEach((sRef: any) => {
 			scripts.push({
 				...sRef.data(),
 				id: sRef.id,
 			})
+		})
+		personalScripts.forEach((sRef: any) => {
+			if (!scripts.some(s => s.id === sRef.id)) {
+				scripts.push({
+					...sRef.data(),
+					id: sRef.id,
+				})
+			}
 		})
 
 		this.setState({
