@@ -2,6 +2,7 @@ const path = require('path')
 
 module.exports = {
 	mode: 'production',
+	// mode: 'none',
 	entry: {
 		index: './src/index.ts',
 		sidebar: './src/sidebar.tsx',

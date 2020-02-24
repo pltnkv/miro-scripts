@@ -1,17 +1,15 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import IScript from 'IScripts'
-import * as firebase from 'firebase/app'
-import {firebaseConfig} from 'config'
+import {EventName, sendScriptEvent} from 'stats'
+import getDB from 'db'
 
-require('firebase/firestore')
 require('./edit.less')
 
-firebase.initializeApp(firebaseConfig)
-const db = firebase.firestore()
-
 type IState = {
-	creatorId: string
+	userId: string
+	teamId: string
+	teamTitle: string
 	hidden: boolean //hack — no blink when create script
 	scripts: IScript[]
 	currentScript: IScript
@@ -26,6 +24,7 @@ function gerRandomColor(): string {
 const newScript: IScript = {
 	id: 'new-id',
 	title: 'New script',
+	description: '',
 	content: 'alert(\'Hi!\')',
 	sharingPolicy: 'none',
 	creatorId: '',
@@ -36,7 +35,9 @@ const newScript: IScript = {
 class Root extends React.Component {
 
 	state: IState = {
-		creatorId: '',
+		userId: '',
+		teamId: '',
+		teamTitle: '',
 		hidden: false,
 		scripts: [],
 		currentScript: newScript,
@@ -50,7 +51,9 @@ class Root extends React.Component {
 		newScript.teamId = state.teamId
 
 		this.setState({
-			creatorId: state.userId,
+			userId: state.userId,
+			teamId: state.teamId,
+			teamTitle: state.teamTitle,
 			scripts: state.scripts,
 		})
 	}
@@ -74,7 +77,7 @@ class Root extends React.Component {
 
 	onCreate() {
 		miro.showNotification('Creating...')
-		db.collection('scripts').add(newScript)
+		getDB().collection('scripts').add(newScript)
 			.then(async (docRef) => {
 				newScript.id = docRef.id
 				this.setState({
@@ -82,6 +85,7 @@ class Root extends React.Component {
 					currentScript: newScript,
 					scripts: this.state.scripts.filter(s => s.id !== this.state.currentScript.id),
 				})
+				sendScriptEvent({eventName: EventName.ScriptCreated, script: newScript, userId: this.state.userId, teamId: this.state.teamId})
 				miro.showNotification('Script has been created')
 				this.setState({
 					scripts: [...this.state.scripts, newScript],
@@ -98,11 +102,12 @@ class Root extends React.Component {
 
 	onSave(close = true) {
 		miro.showNotification('Saving...')
-		let scriptRef = db.collection('scripts').doc(this.state.currentScript.id)
-		let scriptTitle = this.state.currentScript.title
+		const script = this.state.currentScript
+		let scriptRef = getDB().collection('scripts').doc(script.id)
 		scriptRef.set(this.state.currentScript)
 			.then(async () => {
-				miro.showNotification(`Script '${scriptTitle}' has been saved`)
+				miro.showNotification(`Script '${script.title}' has been saved`)
+				sendScriptEvent({eventName: EventName.ScriptEdited, script, userId: this.state.userId, teamId: this.state.teamId})
 				await this.dispatchScriptsUpdated()
 				if (close) {
 					miro.board.ui.closeModal()
@@ -115,14 +120,15 @@ class Root extends React.Component {
 
 	onDelete() {
 		miro.showNotification('Deleting...')
-		let scriptTitle = this.state.currentScript.title
-		let scriptRef = db.collection('scripts').doc(this.state.currentScript.id)
+		const script = this.state.currentScript
+		let scriptRef = getDB().collection('scripts').doc(script.id)
 		scriptRef.delete()
 			.then(async () => {
-				miro.showNotification(`Script '${scriptTitle}' has been deleted`)
+				miro.showNotification(`Script '${script.title}' has been deleted`)
+				sendScriptEvent({eventName: EventName.ScriptDeleted, script, userId: this.state.userId, teamId: this.state.teamId})
 				this.setState({
 					currentScript: newScript,
-					scripts: this.state.scripts.filter(s => s.id !== this.state.currentScript.id),
+					scripts: this.state.scripts.filter(s => s.id !== script.id),
 				}, () => this.dispatchScriptsUpdated())
 			})
 			.catch(() => {miro.showErrorNotification('Can\'t delete script')})
@@ -130,6 +136,14 @@ class Root extends React.Component {
 
 	onTitleChange = (e: any) => {
 		this.state.currentScript.title = e.target.value
+		this.setState({
+			currentScript: this.state.currentScript,
+			currentScriptModified: true,
+		})
+	}
+
+	onDescriptionChange = (e: any) => {
+		this.state.currentScript.description = e.target.value
 		this.setState({
 			currentScript: this.state.currentScript,
 			currentScriptModified: true,
@@ -172,23 +186,33 @@ class Root extends React.Component {
 						style={{backgroundColor: s === newScript ? 'transparent' : s.color}}
 						onClick={() => this.onScriptSelect(s)}>{s.title}</div>
 		})
+
 		return <div>
 			<div className='header'>{scriptBlocks}</div>
 			<div>
 				<input className="script-title miro-input miro-input--primary miro-input--small"
 					   placeholder="Enter script title"
+					   maxLength={100}
 					   value={this.state.currentScript.title}
 					   onChange={this.onTitleChange}/>
 
 				<input className="color-picker" type="color" value={this.state.currentScript.color} onChange={this.onColorChange}/>
 
 				<textarea
+					className="description"
+					placeholder="Briefly describe how to use this script"
+					maxLength={300}
+					value={this.state.currentScript.description || ''}
+					onChange={this.onDescriptionChange}></textarea>
+
+				<textarea
+					className="code"
 					placeholder="// write some code here"
 					value={this.state.currentScript.content}
 					onChange={this.onContentChange}></textarea>
 			</div>
 			{
-				this.state.currentScript.creatorId === this.state.creatorId
+				this.state.currentScript.creatorId === this.state.userId
 					? this.getCheckboxesView()
 					: <p>This script created by other team member</p>
 			}
@@ -203,14 +227,14 @@ class Root extends React.Component {
 					   value="0"
 					   name="radio"
 					   checked={this.state.currentScript.sharingPolicy !== 'team'}
-					   onClick={() => this.onSharingClick('none')}/><span>Personal usage</span>
+					   onClick={() => this.onSharingClick('none')}/><span>Personal usage across your teams</span>
 			</label>
 			<label className="miro-radiobutton">
 				<input type="radio"
 					   value="1"
 					   name="radio"
 					   checked={this.state.currentScript.sharingPolicy === 'team'}
-					   onClick={() => this.onSharingClick('team')}/><span>Shared for team</span>
+					   onClick={() => this.onSharingClick('team')}/><span>Shared for <i>{this.state.teamTitle}</i> team</span>
 			</label>
 		</div>
 	}
@@ -232,7 +256,7 @@ class Root extends React.Component {
 			return <div className="buttons">
 				<button className="miro-btn miro-btn--primary miro-btn--small" onClick={() => this.onSave()}>Save</button>
 				{
-					this.state.currentScript.creatorId === this.state.creatorId
+					this.state.currentScript.creatorId === this.state.userId
 						? <button className="miro-btn miro-btn--danger miro-btn--small" onClick={() => this.onDelete()}>Delete</button>
 						: null
 				}

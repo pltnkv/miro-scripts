@@ -1,38 +1,56 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import IScript from 'IScripts'
-import * as firebase from 'firebase/app'
-import {firebaseConfig} from 'config'
+import getDB from 'db'
+import {EventName, sendScriptEvent} from 'stats'
 
-require("firebase/firestore")
 require('./sidebar.less')
 
-firebase.initializeApp(firebaseConfig)
-const db = firebase.firestore()
-
 type IState = {
+	loaded: boolean
 	scripts: IScript[]
-	currentFilter: string
+	currentFilter: Filter,
+	userId: string
+	teamId: string
+}
+
+enum Filter {
+	ALL = 'all',
+	PERSONAL = 'personal',
+	TEAM = 'team'
+}
+
+const EmptyFilterText = {
+	[Filter.ALL]: `There are no scripts yet. <br>Click 'Manage' to create one.`,
+	[Filter.PERSONAL]: `You have no personal scripts. <br>Click 'Manage' to create one.`,
+	[Filter.TEAM]: `No scripts has been shared for this team yet. <br>Click 'Manage' to create one.`,
 }
 
 class Root extends React.Component {
 
 	state: IState = {
+		loaded: false,
 		scripts: [],
-		currentFilter: 'all',
+		currentFilter: Filter.ALL,
+		userId: '',
+		teamId: '',
 	}
 
 	async componentDidMount() {
+		const team = await miro.account.get()
 		const userId = await miro.currentUser.getId()
-		const teamId = (await miro.account.get()).id
+		const teamId = team.id
 
-		const personalScripts = await db.collection('scripts')
+		const personalScriptsRequest = getDB().collection('scripts')
 			.where('sharingPolicy', '==', 'none')
 			.where('creatorId', '==', userId).get()
 
-		const teamScripts = await db.collection('scripts')
+		const teamScriptsRequest = getDB().collection('scripts')
 			.where('sharingPolicy', '==', 'team')
 			.where('teamId', '==', teamId).get()
+
+		const personalScripts = await personalScriptsRequest
+		const teamScripts = await teamScriptsRequest
 
 		const scripts: IScript[] = []
 		teamScripts.forEach((sRef: any) => {
@@ -51,12 +69,16 @@ class Root extends React.Component {
 		})
 
 		this.setState({
+			userId,
+			teamId,
 			scripts,
+			loaded: true,
 		})
 		miro.__setRuntimeState({
 			scripts,
 			userId,
 			teamId,
+			teamTitle: team.title,
 		})
 	}
 
@@ -64,12 +86,12 @@ class Root extends React.Component {
 		const newState = await miro.__getRuntimeState()
 		this.setState({
 			scripts: newState.scripts,
-			currentFilter: 'all',
+			currentFilter: Filter.ALL,
 		})
 	}
 
 	async manageScripts() {
-		await miro.board.ui.openModal('edit.html', {width: 1000, height: 700})
+		await miro.board.ui.openModal('edit.html', {width: 1000, height: 760})
 		this.updateState()
 	}
 
@@ -80,6 +102,7 @@ class Root extends React.Component {
 			console.error(e)
 			miro.showErrorNotification(`There is some error in '${s.title}' script`)
 		}
+		sendScriptEvent({eventName: EventName.ScriptRunned, script: s, userId: this.state.userId, teamId: this.state.teamId})
 	}
 
 	selectFilter(filter: string) {
@@ -89,31 +112,46 @@ class Root extends React.Component {
 	}
 
 	render() {
-		const scriptBlocks = this.state.scripts
-			.filter(s => {
-				return this.state.currentFilter === 'personal' && s.sharingPolicy === 'none'
-					|| this.state.currentFilter === 'team' && s.sharingPolicy === 'team'
-					|| this.state.currentFilter === 'all'
-			})
-			.map(s =>
-				<div key={s.id}
-					 className="script-block"
-					 style={{backgroundColor: s.color}}
-					 onClick={() => this.runScript(s)}>
-					{s.title}
-				</div>,
-			)
+		const scripts = this.state.scripts.filter(s => {
+			return this.state.currentFilter === Filter.PERSONAL && s.sharingPolicy === 'none'
+				|| this.state.currentFilter === Filter.TEAM && s.sharingPolicy === 'team'
+				|| this.state.currentFilter === Filter.ALL
+		})
+
+		const scriptsBlock = scripts.map(s =>
+			<div key={s.id}
+				 className="script-block"
+				 title={s.description || 'No description :('}
+				 style={{backgroundColor: s.color}}
+				 onClick={() => this.runScript(s)}>
+				{s.title}
+			</div>,
+		)
+
+		const getHint = () => {
+			return {
+				__html: EmptyFilterText[this.state.currentFilter],
+			}
+		}
+
+		if (!this.state.loaded) {
+			return null
+		}
 
 		return <div>
 			<h1>Scripts</h1>
 			<div className="filters">
-				<span className={this.state.currentFilter === 'all' ? 'selected' : ''} onClick={() => this.selectFilter('all')}>All</span>
-				<span className={this.state.currentFilter === 'personal' ? 'selected' : ''} onClick={() => this.selectFilter('personal')}>Personal</span>
-				<span className={this.state.currentFilter === 'team' ? 'selected' : ''} onClick={() => this.selectFilter('team')}>Team</span>
+				<span className={this.state.currentFilter === Filter.ALL ? 'selected' : ''} onClick={() => this.selectFilter('all')}>All</span>
+				<span className={this.state.currentFilter === Filter.PERSONAL ? 'selected' : ''} onClick={() => this.selectFilter('personal')}>Personal</span>
+				<span className={this.state.currentFilter === Filter.TEAM ? 'selected' : ''} onClick={() => this.selectFilter('team')}>Team</span>
 				<span className="settings-button" onClick={() => this.manageScripts()}>Manage</span>
 			</div>
 			<div className="scripts-list">
-				{scriptBlocks}
+				{
+					scripts.length > 0
+						? scriptsBlock
+						: <div className="hint" dangerouslySetInnerHTML={getHint()}></div>
+				}
 			</div>
 		</div>
 	}
